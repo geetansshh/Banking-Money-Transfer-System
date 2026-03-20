@@ -1,28 +1,52 @@
 # Bank Transfer Web Application
 
-Simple full-stack application for creating bank accounts, transferring money, and viewing transaction history.
+Simple full-stack app to create accounts, transfer money, and view per-account transaction history.
+
+## Live Links
+- Application: https://banking-money-transfer-system.vercel.app/
+- Backend API: https://banking-backend-3cqb.onrender.com
 
 ## Tech Stack
 - Backend: Django + Django REST Framework
 - Frontend: React (Vite)
 - Database: PostgreSQL
 
-## Scope Covered
-- Create user bank accounts with starting balance
-- View account balance and full transaction history
-- Transfer money between accounts
-- Block transfers that exceed source balance
-- Show updated transaction history immediately after each transfer
+## Code Structure
+- `backend/banking/models.py`
+  - `Account`: stores account name and current balance
+  - `Transaction`: stores transfer entries with source, destination, amount, and timestamp
+- `backend/banking/serializers.py`
+  - Input/output validation for account creation and transfers
+- `backend/banking/views.py`
+  - API endpoints for account list/create, account detail/history, and transfer
+- `backend/banking/urls.py`
+  - Banking route mapping
+- `frontend/src/App.jsx`
+  - Single-page UI with 3 tabs: Accounts, Transfer, History
+- `frontend/src/styles.css`
+  - UI styling
 
-## Project Structure
-- `backend/` Django REST API
-- `frontend/` React UI
+## Core Logic
+- Account creation creates an account with opening balance.
+- Transfer API validates:
+  - source account exists
+  - destination account exists
+  - source and destination are different
+  - transfer amount is positive
+  - source has enough balance
+- Valid transfer updates balances and records transaction atomically.
+- Account detail endpoint returns account data plus related transactions so history stays consistent.
 
-## Backend API Endpoints
+## Assumptions
+- A single user can manage multiple bank accounts in one place (portfolio-style view).
+- Transfers happen only between accounts that exist inside this system.
+- Authentication/authorization is out of scope for this assignment.
+
+## API Endpoints
 - `POST /api/accounts/` create account
 - `GET /api/accounts/` list accounts
-- `GET /api/accounts/<id>/` account detail + transaction history
-- `POST /api/transfers/` transfer between accounts
+- `GET /api/accounts/<id>/` account detail + history
+- `POST /api/transfers/` transfer money
 
 ## Local Setup
 ### 1) Backend
@@ -30,85 +54,36 @@ Simple full-stack application for creating bank accounts, transferring money, an
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r backend/requirements.txt
+export DATABASE_URL="postgresql://<user>:<password>@<host>:5432/<db_name>"
 python3 backend/manage.py migrate
 python3 backend/manage.py runserver
 ```
-Backend runs at `http://localhost:8000`.
-
-By default, backend uses local PostgreSQL database `bank_transfer_db` on `127.0.0.1:5432` with your OS username.  
-For cloud/custom DB, set `DATABASE_URL` explicitly. See `backend/.env.example`.
+Backend: `http://localhost:8000`
 
 ### 2) Frontend
-In a second terminal:
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-Frontend runs at `http://localhost:5173`.
+Frontend: `http://localhost:5173`
 
-Note: Vite proxy is configured, so frontend calls `/api/*` and forwards to Django automatically in dev.
+Note: Vite proxy forwards `/api/*` to `http://localhost:8000` in local development.
 
-## Deploy (Neon + Render + Vercel)
-### 1) Neon (PostgreSQL)
-1. Create a Neon project and database.
-2. Copy the connection string (it includes `sslmode=require`).
-3. Keep it ready as `DATABASE_URL`.
-
-### 2) Render (Django API)
-1. Create a new **Web Service** from this GitHub repo.
-2. Set **Root Directory** to `backend`.
-3. Build Command:
-```bash
-pip install -r requirements.txt && python manage.py migrate
-```
-4. Start Command:
-```bash
-gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
-```
-5. Add environment variables:
-   - `SECRET_KEY=<strong-random-secret>`
-   - `DEBUG=False`
-   - `ALLOWED_HOSTS=<your-render-service>.onrender.com`
-   - `DATABASE_URL=<neon-connection-string>`
-   - `DB_SSL_REQUIRE=True`
-   - `CORS_ALLOWED_ORIGINS=https://<your-vercel-app>.vercel.app`
-
-### 3) Vercel (React UI)
-1. Create a new Vercel project from the same GitHub repo.
-2. Set **Root Directory** to `frontend`.
-3. Add environment variable:
-   - `VITE_API_BASE_URL=https://<your-render-service>.onrender.com/api`
-4. Deploy.
-
-### 4) Post-deploy smoke test
-1. Create two accounts.
-2. Transfer an amount between them.
-3. Verify history updates and over-limit transfer is blocked.
-
-## Sample Test Flow
-1. Create account `Alice` with `1000.00`
-2. Create account `Bob` with `500.00`
-3. Transfer `200.00` from Alice to Bob
+## Sample Usage / Test Flow
+1. Create account `Alice` with `1000.00`.
+2. Create account `Bob` with `500.00`.
+3. Transfer `200.00` from Alice to Bob.
 4. Verify balances:
    - Alice: `800.00`
    - Bob: `700.00`
-5. Open account history and confirm transfer appears as:
-   - Alice: `DEBIT`
-   - Bob: `CREDIT`
-6. Try transfer `5000.00` from Alice to Bob and confirm it is rejected
+5. Open history for both accounts:
+   - Alice shows `DEBIT`
+   - Bob shows `CREDIT`
+6. Try transfer `5000.00` from Alice to Bob and verify rejection.
 
-## Backend Tests
+## Tests
+Run backend tests:
 ```bash
 python3 backend/manage.py test banking
 ```
-
-## Design Notes (KISS, SoC, DRY)
-- Clear separation: models, serializers, views, URLs
-- Atomic transfer logic in one API to ensure consistent balances
-- Single transaction table reused for account history (debit/credit derived per account)
-- Minimal UI state and API helpers to avoid duplicated network logic
-
-## Submission Deliverables
-- Live URL: deploy this project (backend + frontend) to your preferred platform
-- GitHub Repository: push this codebase to your GitHub repo
