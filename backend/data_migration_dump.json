@@ -1,0 +1,52 @@
+[
+{
+  "model": "banking.account",
+  "pk": 1,
+  "fields": {
+    "name": "Alice",
+    "balance": "850.00",
+    "created_at": "2026-03-19T18:17:04.294Z",
+    "updated_at": "2026-03-19T18:40:27.941Z"
+  }
+},
+{
+  "model": "banking.account",
+  "pk": 2,
+  "fields": {
+    "name": "Bob",
+    "balance": "700.00",
+    "created_at": "2026-03-19T18:17:20.963Z",
+    "updated_at": "2026-03-19T18:18:51.498Z"
+  }
+},
+{
+  "model": "banking.account",
+  "pk": 3,
+  "fields": {
+    "name": "Geetansh",
+    "balance": "9950.00",
+    "created_at": "2026-03-19T18:40:12.941Z",
+    "updated_at": "2026-03-19T18:40:27.940Z"
+  }
+},
+{
+  "model": "banking.transaction",
+  "pk": 1,
+  "fields": {
+    "source_account": 1,
+    "destination_account": 2,
+    "amount": "200.00",
+    "created_at": "2026-03-19T18:18:51.499Z"
+  }
+},
+{
+  "model": "banking.transaction",
+  "pk": 2,
+  "fields": {
+    "source_account": 3,
+    "destination_account": 1,
+    "amount": "50.00",
+    "created_at": "2026-03-19T18:40:27.942Z"
+  }
+}
+]
